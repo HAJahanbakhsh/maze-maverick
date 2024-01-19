@@ -1,8 +1,74 @@
 #include <iostream>
-#include <stdlib.h>
-#include <time.h>
+#include <cstdlib>
+#include <ctime>
 #include <fstream>
+#include <vector>
+#include <algorithm>
+#include <random>
 using namespace std;
+
+int tool;
+bool check= false;
+
+vector<int> order = {1, 2, 3, 4};
+
+void path (int x, int y, int length, int**& copy_maze) {
+
+    if (length < 0) {
+        return;
+    }
+
+    if ((length - 1  == 0) && (copy_maze[x + 1][y] == 2 || copy_maze[x][y + 1] == 2)) {
+        check = true;
+       copy_maze[x][y]=0;
+        return;
+    }
+
+
+    // Use the <random> header to generate random numbers
+    random_device rd;
+    mt19937 gen(rd());
+    shuffle(order.begin(), order.end(), gen);
+
+    for (int i = 0; i < 4; i++) {
+        if (order[i] == 1 && copy_maze[x + 1][y] == 1) {
+            copy_maze[x][y] = 0;
+            path(x + 1, y, length - 1, copy_maze);
+            if (check) {
+                return;
+            } else {
+                copy_maze[x][y] = 1;
+            }
+        } else if (order[i] == 2 && copy_maze[x - 1][y] == 1) {
+            copy_maze[x][y] = 0;
+            path(x - 1, y, length - 1, copy_maze);
+            if (check) {
+                return;
+            } else {
+                copy_maze[x][y] = 1;
+            }
+        } else if (order[i] == 3 && copy_maze[x][y + 1] == 1) {
+            copy_maze[x][y] = 0;
+            path(x, y + 1, length - 1, copy_maze);
+            if (check) {
+                return;
+            } else {
+                copy_maze[x][y] = 1;
+            }
+        } else if (order[i] == 4 && copy_maze[x][y - 1] == 1) {
+            copy_maze[x][y] = 0;
+            path(x, y - 1, length - 1, copy_maze);
+            if (check) {
+                return;
+            } else {
+                copy_maze[x][y] = 1;
+            }
+        }
+    }
+   copy_maze[x][y]=1;
+
+}
+
 
 void EasyMap(int command){
     /*
@@ -159,9 +225,114 @@ void EasyMap(int command){
         }
         map<<endl;
     }
+
+map.close().
 }
 
-void HardMap(int command);
+void HardMap(int command){
+        srand(time(0));
+    int x,y;
+    cin>>x>>y;cout<<"Enter the length of the path :";cin>>tool;
+
+    while ((tool-(x+y-2))%2!=0||tool>x*y||tool<x+y-2){
+        cerr<<"The desired path length dose not exist!!!\nEnter the length of the path again :";
+        cin>>tool;
+    }
+
+    int** copymap;
+    int al,au,bl,bu;
+    cout<<"\nEnter the range of numbers in the table : (";
+    cin>>al;cout<<",";cin>>au;cout<<")\n";
+    cout<<"Enter a range of zero blocks : (";cin>>bl;cout<<",";cin>>bu;cout<<") \n";
+    copymap=new int *[x+2];
+
+
+
+    while (bl>(x*y)-tool-1){
+        cerr<<"There are to many zero blocks!!!\nEnter a range of zero blocks again :";
+        cin>>bl>>bu;
+
+    }
+
+
+    int blocks=rand()%(bu-bl+1)+bl;
+
+    while (blocks>(x*y)-tool-1){
+        blocks=rand()%(bu-bl+1)+bl;
+    }
+
+    for (int i = 0; i < x+2 ; ++i) {
+        copymap[i]=new int [y+2];
+        for (int j = 0; j < y+2 ; ++j) {
+                copymap[i][j]=0;
+        }
+    }
+
+    for (int i = 1; i < x+2 ; ++i) {
+        for (int j = 1; j < y+1 ; ++j) {
+            copymap[i][j]=1;
+        }
+    }
+    copymap[x][y]=2;
+
+    path(1,1,tool,copymap);
+
+
+        cout<<endl<<endl;
+
+        string playground [x][y];
+        int random_number,sum=0;
+
+    for (int i = 0; i < x ; ++i) {
+        for (int j = 0; j < y ; ++j) {
+            playground[i][j]=to_string(copymap[i+1][j+1]);
+            if (playground[i][j]=="0"){
+                random_number=rand()%(au-al+1)+al;
+                while (random_number==0){
+                    random_number=rand()%(au-al+1)+al;
+                }
+                sum+=random_number;
+                playground[i][j]= to_string(random_number);
+            }
+            else if (playground[i][j]=="1"){
+                playground[i][j]="#";
+            }
+        }
+    }
+
+    playground[x-1][y-1]=to_string(sum);
+
+    for (int k = 0; k < blocks ; ++k) {
+        int i=rand()%x;
+        int j=rand()%y;
+        while (playground[i][j]!="#"){
+            i=rand()%x;
+            j=rand()%y;
+        }
+        playground[i][j]="0";
+    }
+    string name;
+    cout<<"Enter the name of the map :";
+    cin>>name;
+    fstream map ("Maps/"+name+".txt",ios::app);
+
+
+    for (int i = 0; i < x ; ++i) {
+        for (int j = 0; j < y; ++j) {
+            if (playground[i][j]=="#"){
+                random_number=rand()%(au-al+1)+al;
+                while (random_number==0){
+                    random_number=rand()%(au-al+1)+al;
+                }
+                playground[i][j]= to_string(random_number);
+            }
+            map<<playground[i][j]<<" ";
+        }
+        map<<endl;
+    }
+
+    map.close();
+}
 
 int main(){
     int choose,command;
