@@ -5,10 +5,13 @@
 #include <vector>
 #include <algorithm>
 #include <random>
+#include <windows.h>
+#include <iomanip>
 using namespace std;
 
 int tool;
 bool check= false;
+vector<int> order = {1, 2, 3, 4};
 
 typedef enum
 {
@@ -36,11 +39,18 @@ short setTextColor(const ConsoleColors foreground)
 
 
 
-void GPS (int x, int y, int target_x , int target_y, int**& copy_maze , int sum , int**& number) {
+void GPS (int x, int y, int target_x , int target_y, int**& copy_maze , int sum , int**& number, int length) {
+   if(target_x-x+target_y-y>length){
+       return;
+   }
 
 
+    if (length<0){
+        return;
+    }
 
-    if ( sum-copy_maze[x][y] == 0 && (( x + 1 == target_x && y == target_y ) ||( x == target_x && y + 1 == target_y))) {
+
+    if ( length-1==0 &&sum-copy_maze[x][y] == 0 && (( x + 1 == target_x && y == target_y ) ||( x == target_x && y + 1 == target_y))) {
         check = true;
         copy_maze[x][y]=0;
         return;
@@ -55,7 +65,7 @@ void GPS (int x, int y, int target_x , int target_y, int**& copy_maze , int sum 
 
         if (copy_maze[x + 1][y] != 0 && order[i] == 1) {
             copy_maze[x][y] = 0;
-            GPS(x + 1, y, target_x, target_y, copy_maze, sum - number[x][y], number);
+            GPS(x + 1, y, target_x, target_y, copy_maze, sum - number[x][y], number,length-1);
             if (check) {
                 return;
             } else {
@@ -65,7 +75,7 @@ void GPS (int x, int y, int target_x , int target_y, int**& copy_maze , int sum 
 
          if (copy_maze[x - 1][y] != 0 && order[i] == 2) {
             copy_maze[x][y] = 0;
-            GPS(x - 1, y, target_x, target_y, copy_maze, sum - number[x][y], number);
+            GPS(x - 1, y, target_x, target_y, copy_maze, sum - number[x][y], number,length-1);
             if (check) {
                 return;
             } else {
@@ -75,7 +85,7 @@ void GPS (int x, int y, int target_x , int target_y, int**& copy_maze , int sum 
 
          if (copy_maze[x][y + 1] != 0 &&order[i] == 3) {
             copy_maze[x][y] = 0;
-            GPS(x, y + 1, target_x, target_y, copy_maze, sum - number[x][y], number);
+            GPS(x, y + 1, target_x, target_y, copy_maze, sum - number[x][y], number,length-1);
             if (check) {
                 return;
             } else {
@@ -85,7 +95,7 @@ void GPS (int x, int y, int target_x , int target_y, int**& copy_maze , int sum 
 
          if (copy_maze[x][y - 1] != 0 && order[i] == 4) {
             copy_maze[x][y] = 0;
-            GPS(x, y - 1, target_x, target_y, copy_maze, sum - number[x][y], number);
+            GPS(x, y - 1, target_x, target_y, copy_maze, sum - number[x][y], number,length-1);
             if (check) {
                 return;
             } else {
@@ -98,110 +108,114 @@ void GPS (int x, int y, int target_x , int target_y, int**& copy_maze , int sum 
 
 }
 
-void Solve(int command){
-    string names,choose;
-    fstream maps("Maps/names.txt",ios::in);
-    int m=0;
-
-
+void Solve(int command) {
+    string names, choose;
+    fstream maps("Maps/names.txt", ios::in);
+    int m = 0;
 
 
     setTextColor(LIGHT_BLUE);
 
-    while (getline(maps,names)){
-        cout<<m+1<<"."<<names<<endl;
+    while (getline(maps, names)) {
+        cout << m + 1 << "." << names << endl;
         m++;
     }
 
 
     setTextColor(LIGHT_WHITE);
-    cout<<"which one !?";cin>>choose;
-
+    cout << "which one !?";
+    cin >> choose;
 
 
     maps.close();
 
-    fstream map ("Maps/"+choose+".txt",ios::in);
-    string generate,line="";
-    while (getline(map,generate)){
-        line+=generate;
+    fstream map("Maps/" + choose + ".txt", ios::in);
+    string generate, line = "";
+    while (getline(map, generate)) {
+        line += generate;
     }
 
-    int x=0,y=0;
+    int x = 0, y = 0;
     for (int i = 0; i < line.length(); ++i) {
-        if (line[i]=='#'){
+        if (line[i] == '#') {
             y++;
-        }
-        else if (line[i]=='!'){
+        } else if (line[i] == '!') {
             x++;
         }
     }
 
-    y=y/x;
+    y = y / x;
 
     string playgroud[x][y];
 
-    int k=-1,n=-1;
+    int k = -1, n = -1;
+    int length;
+    string length1;
+
 
     for (int i = 0; i < line.length(); ++i) {
-         if (line[i]=='#'){
+        if (line[i] == '#') {
             k++;
-        }
-        else if (line[i]=='!'){
+        } else if (line[i] == '!') {
             n++;
-            k=-1;
+            k = -1;
+        } else if (line[i] == '$') {
+            i++;
+            while (line[i] != '%') {
+                length1 = length1 + line[i];
+                i++;
+            }
+        } else {
+            playgroud[n][k] += line[i];
         }
-         else{
-             playgroud[n][k]+=line[i];
-         }
     }
 
 
 
+    length = stoi(length1);
 
     int **copy_map;
-    copy_map=new int *[x+2];
-    for (int i = 0; i < x+2; ++i) {
-        copy_map[i]=new int [y+2];
-        for (int j = 0; j < y+2 ; ++j) {
+    copy_map = new int *[x + 2];
+    for (int i = 0; i < x + 2; ++i) {
+        copy_map[i] = new int[y + 2];
+        for (int j = 0; j < y + 2; ++j) {
 
-            copy_map[i][j]=0;
-
-        }
-    }
-
-    for (int i = 0; i < x; ++i) {
-        for (int j = 0; j < y; ++j) {
-            copy_map[i+1][j+1]= stoi(playgroud[i][j]);
-        }
-    }
-    copy_map[x][y]=0;
-
-
-
-    int ** number;
-    number = new int *[x+2];
-
-    for (int i = 0; i < x+2; ++i) {
-        number[i]=new int [y+2];
-        for (int j = 0; j < y+2 ; ++j) {
-
-            number[i][j]=0;
+            copy_map[i][j] = 0;
 
         }
     }
 
     for (int i = 0; i < x; ++i) {
         for (int j = 0; j < y; ++j) {
-            number[i+1][j+1]= stoi(playgroud[i][j]);
+            copy_map[i + 1][j + 1] = stoi(playgroud[i][j]);
         }
     }
-    number[x][y]=0;
+    copy_map[x][y] = 0;
+
+
+    int **number;
+    number = new int *[x + 2];
+
+    for (int i = 0; i < x + 2; ++i) {
+        number[i] = new int[y + 2];
+        for (int j = 0; j < y + 2; ++j) {
+
+            number[i][j] = 0;
+
+        }
+    }
+
+    for (int i = 0; i < x; ++i) {
+        for (int j = 0; j < y; ++j) {
+            number[i + 1][j + 1] = stoi(playgroud[i][j]);
+        }
+    }
+    number[x][y] = 0;
 
 
 
 
-    GPS(1,1,x,y,copy_map, stoi(playgroud[x-1][y-1]),number);
+    GPS(1,1,x,y,copy_map, stoi(playgroud[x-1][y-1]),number,length);
 
     check= false;
 
@@ -222,7 +236,7 @@ void Solve(int command){
 
             }
             else if (i == x-1 && j == y-1){
-                setTextColor(LIGHT_AQUA);
+                setTextColor(LIGHT_YELLOW);
                 cout << setw(2) << setfill(' ')<<stoi(playgroud[i][j])<<setw(2)<<setfill(' ') ;
                 setTextColor(LIGHT_WHITE);
             }
@@ -237,9 +251,12 @@ void Solve(int command){
 
 }
 
-vector<int> order = {1, 2, 3, 4};
 
-void path (int x, int y, int length, int**& copy_maze) {
+
+void path (int x, int y, int length, int**& copy_maze, int target_x , int target_y) {
+    if(target_x-x+target_y-y>length){
+        return;
+    }
 
     if (length < 0) {
         return;
@@ -260,7 +277,7 @@ void path (int x, int y, int length, int**& copy_maze) {
     for (int i = 0; i < 4; i++) {
         if (order[i] == 1 && copy_maze[x + 1][y] == 1) {
             copy_maze[x][y] = 0;
-            path(x + 1, y, length - 1, copy_maze);
+            path(x + 1, y, length - 1, copy_maze,  target_x ,  target_y);
             if (check) {
                 return;
             } else {
@@ -268,7 +285,7 @@ void path (int x, int y, int length, int**& copy_maze) {
             }
         } else if (order[i] == 2 && copy_maze[x - 1][y] == 1) {
             copy_maze[x][y] = 0;
-            path(x - 1, y, length - 1, copy_maze);
+            path(x - 1, y, length - 1, copy_maze,  target_x ,  target_y);
             if (check) {
                 return;
             } else {
@@ -276,7 +293,7 @@ void path (int x, int y, int length, int**& copy_maze) {
             }
         } else if (order[i] == 3 && copy_maze[x][y + 1] == 1) {
             copy_maze[x][y] = 0;
-            path(x, y + 1, length - 1, copy_maze);
+            path(x, y + 1, length - 1, copy_maze,  target_x ,  target_y);
             if (check) {
                 return;
             } else {
@@ -284,7 +301,7 @@ void path (int x, int y, int length, int**& copy_maze) {
             }
         } else if (order[i] == 4 && copy_maze[x][y - 1] == 1) {
             copy_maze[x][y] = 0;
-            path(x, y - 1, length - 1, copy_maze);
+            path(x, y - 1, length - 1, copy_maze,  target_x ,  target_y);
             if (check) {
                 return;
             } else {
@@ -297,17 +314,17 @@ void path (int x, int y, int length, int**& copy_maze) {
 }
 
 
-void EasyMap(int command){
+void EasyMap(int command) {
     /*
      First, in this part, we get (number of rows = x) and (number of columns = y).
     [moves] is a 1D array of how the track moves and [playground] is a 2D array of the game map.
     */
-    int x , y ;
-    cout<<"Enter the number of rows :";
-    cin>> x ;
-    cout<<"\nEnter the number of columns :";
-    cin>> y ;
-    int moves[x+y-2];
+    int x, y;
+    cout << "Enter the number of rows :";
+    cin >> x;
+    cout << "\nEnter the number of columns :";
+    cin >> y;
+    int moves[x + y - 2];
     int length = x + y - 2;
     int playground[x][y];
     string name;
@@ -318,7 +335,7 @@ void EasyMap(int command){
     Here we determine the number of zero blocks using the rand function.
     */
 
-    int blocks =rand()%4+2;
+    int blocks = rand() % 4 + 2;
 
     /*
      Now it's time to create a motion display. First, in this step, we set all the members of the array (movements) equal to two.
@@ -329,34 +346,33 @@ void EasyMap(int command){
 
 
     for (int i = 0; i < length; ++i) {
-        moves[i]=2;
+        moves[i] = 2;
     }
 
-    for (int i = 0; i < x-1; ++i) {
+    for (int i = 0; i < x - 1; ++i) {
 
-        int randmove=rand()% length ,a=randmove;
-        if (moves[randmove]!=1){
-            moves[randmove]=1;
+        int randmove = rand() % length, a = randmove;
+        if (moves[randmove] != 1) {
+            moves[randmove] = 1;
 
-        }
-        else {
-            while (randmove==a){
-                randmove=rand()%(length);
+        } else {
+            while (randmove == a) {
+                randmove = rand() % (length);
             }
-            moves[randmove]=1;
+            moves[randmove] = 1;
 
         }
     }
 
     for (int i = 0; i < length; ++i) {
-        if (moves[i]==2) {
+        if (moves[i] == 2) {
             moves[i] = 0;
         }
     }
 
     for (int i = 0; i < x; ++i) {
         for (int j = 0; j < y; ++j) {
-            playground[i][j]=9;
+            playground[i][j] = 9;
         }
     }
 
@@ -370,51 +386,49 @@ void EasyMap(int command){
         And finally, when we reach the last house, we make it equal to (sum), which is the sum of the path numbers.
     */
 
-    int ipath=0;
-    int jpath=0;
-    int sum =0;
+    int ipath = 0;
+    int jpath = 0;
+    int sum = 0;
 
     for (int k = 0; k < length; ++k) {
 
-        int path=rand()%7-3;
+        int path = rand() % 7 - 3;
 
         while (path == 0) {
             path = rand() % 7 - 3;
         }
-        playground[ipath][jpath]=path;
+        playground[ipath][jpath] = path;
 
-        if (moves[k]==1){
+        if (moves[k] == 1) {
             ipath++;
         }
 
-        if (moves[k]==0){
+        if (moves[k] == 0) {
             jpath++;
         }
 
-        sum+=path;
+        sum += path;
     }
-    playground[x-1][y-1]=sum;
+    playground[x - 1][y - 1] = sum;
 
     /*
      In this step, select 0 blocks We randomly select (i,j) and place 0 in the desired house.
      */
 
     for (int k = 0; k < blocks; ++k) {
-        int i=rand()%x-1;
-        int j=rand()%y-1;
+        int i = rand() % x - 1;
+        int j = rand() % y - 1;
 
-        if (playground[i][j]==9){
-            playground[i][j]=0;
-        }
+        if (playground[i][j] == 9) {
+            playground[i][j] = 0;
+        } else {
 
-        else {
-
-            while (playground[i][j]!=9){
-                i=rand()%x-1;
-                j=rand()%y-1;
+            while (playground[i][j] != 9) {
+                i = rand() % x - 1;
+                j = rand() % y - 1;
             }
 
-            playground[i][j]=0;
+            playground[i][j] = 0;
 
         }
 
@@ -423,38 +437,44 @@ void EasyMap(int command){
          In the last step, we get the name of the map from the user and after assigning values to all the houses
      whose values are equal to 9, we print them in the desired file.
     */
-    cout<<"\nEnter the name of the map (without the file extension) :";
-    cin>>name;
-    fstream map("Maps/"+name+".txt",ios::app);
+    cout << "\nEnter the name of the map (without the file extension) :";
+    cin >> name;
+    fstream map("Maps/" + name + ".txt", ios::app);
+    fstream names("Maps/names.txt",ios::app);
+    names<<name<<endl;
+    names.close();
 
 
-    for (int i = 0 ; i < x ; ++i) {
-        map<<"!";
-        for (int j = 0; j < y ; ++j) {
+    for (int i = 0; i < x; ++i) {
+        map << "!";
+        for (int j = 0; j < y; ++j) {
 
-            if (playground[i][j]==9 && !(i==x-1&&j==y-1)){
-                playground[i][j]=rand()%7-3;
+            if (playground[i][j] == 9 && !(i == x - 1 && j == y - 1)) {
+                playground[i][j] = rand() % 7 - 3;
 
-                if (playground[i][j]==0){
+                if (playground[i][j] == 0) {
 
-                    int playrand=rand()%7-3;
+                    int playrand = rand() % 7 - 3;
 
-                    while (playrand==0){
-                        playrand=rand()%7-3;
+                    while (playrand == 0) {
+                        playrand = rand() % 7 - 3;
 
                     }
 
-                    playground[i][j]=playrand;
+                    playground[i][j] = playrand;
                 }
 
             }
-            map<<"#"<<playground[i][j];
+            map << "#" << playground[i][j];
         }
-        map<<endl;
+        map << endl;
     }
+    map<<"$"<<length<<"%";
 
-map.close().
+    map.close();
+
 }
+
 
 void HardMap(int command){
         srand(time(0));
@@ -502,7 +522,7 @@ void HardMap(int command){
     }
     copymap[x][y]=2;
 
-    path(1,1,tool,copymap);
+    path(1,1,tool,copymap,x,y);
 
 
         cout<<endl<<endl;
@@ -542,6 +562,8 @@ void HardMap(int command){
     cout<<"Enter the name of the map :";
     cin>>name;
     fstream map ("Maps/"+name+".txt",ios::app);
+    fstream maps ("Maps/names.txt",ios::app);
+    maps<<name<<endl;
 
 
     for (int i = 0; i < x ; ++i) {
@@ -554,12 +576,13 @@ void HardMap(int command){
                 }
                 playground[i][j]= to_string(random_number);
             }
-            map<<"#"<playground[i][j];
+            map<<"#"<<playground[i][j];
         }
         map<<endl;
     }
-
+    map<<"$"<<tool<<"%";
     map.close();
+
 }
 
 int main(){
@@ -600,7 +623,9 @@ int main(){
         else if (choose == 3) {
             cout << "/Solve a Maze :\n1. Choose from Existing Maps\n2. Import a Custom Map\n";
             cout << "Enter your command :";
-            cin >> command;
+            Solve(choose);
+            cout<<endl<<endl;
+
         }
 
         else if (choose == 4) {
