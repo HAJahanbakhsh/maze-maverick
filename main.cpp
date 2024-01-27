@@ -579,9 +579,9 @@ void play(string **&playgroud,int length,int x,int y){
 
 
                 }
-                system("cls");
+                
             }
-
+            system("cls");
         }
         check= false;
         if ( copy_map[x_move][y_move]==0){
