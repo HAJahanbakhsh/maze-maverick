@@ -18,6 +18,8 @@ int length_map;
 int x_map,y_map;
 string map_name;
 
+//----------------------------------------------------------------------------------------------------------------------
+
 typedef enum
 {
     BLACK = 0, BLUE = 1, GREEN = 2,
@@ -42,6 +44,7 @@ short setTextColor(const ConsoleColors foreground)
     return 1;
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 
 void history_reader(int command){
 
@@ -86,6 +89,9 @@ int n=0;
 }
 
 
+//----------------------------------------------------------------------------------------------------------------------
+
+
 void history_maker(string time,string date,string name,string map,string result){
 
 
@@ -96,6 +102,10 @@ void history_maker(string time,string date,string name,string map,string result)
     }
 
     history.close();
+
+
+    //This function first removes the tenth game,
+    // then adds one to the queue of the other games, and finally loads the statistics of the new game.
 
     line.erase(line.find("//(10)"));
     line.erase(line.find("(9)")+1,1);
@@ -150,7 +160,7 @@ void history_maker(string time,string date,string name,string map,string result)
 
 
 
-
+//----------------------------------------------------------------------------------------------------------------------
 
 void map_reader(int command){
     if(command==1) {
@@ -244,6 +254,7 @@ void map_reader(int command){
         for (int i = 0; i < x_map; ++i) {
             map_read[i]=new string [y_map];
             for (int j = 0; j < y_map ; ++j) {
+                system("cls");
                 cout<<"\n Enter the [";
                 setTextColor(LIGHT_YELLOW);
                 cout<<i+1;
@@ -256,6 +267,7 @@ void map_reader(int command){
                 cin>>map_read[i][j];
             }
         }
+        system("cls");
         setTextColor(LIGHT_GREEN);
         cout<<"\nEnter the length of the path :";
         setTextColor(LIGHT_WHITE);
@@ -263,9 +275,12 @@ void map_reader(int command){
         cout<<"Enter the name of the map :";
         cin>>map_name;
         return ;
-
+        system("cls");
     }
 }
+
+
+//----------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -333,9 +348,15 @@ void GPS (int x, int y, int target_x , int target_y, int**& copy_maze , int sum 
 
 }
 
+
+
+//----------------------------------------------------------------------------------------------------------------------
+
 void Solve(string **&playgroud,int length,int x,int y) {
 
-
+/*First, we make two copies of the received map with length and width plus two,
+ * then we set the box blocks equal to zero and the middle blocks equal to the blocks of the original map,
+ * then we set the last block of each equal to zero.*/
     int **copy_map;
     copy_map = new int *[x + 2];
     for (int i = 0; i < x + 2; ++i) {
@@ -376,13 +397,19 @@ void Solve(string **&playgroud,int length,int x,int y) {
 
 
 
-
+/*This function returns in each block to the adjacent blocks that are allowed inside to find the path*/
     GPS(1,1,x,y,copy_map, stoi(playgroud[x-1][y-1]),number,length);
-
+    if (!check){
+        setTextColor(RED);
+        cout<<"No path found!";
+        setTextColor(LIGHT_WHITE);
+        return;
+    }
     check= false;
 
-    cout<<endl;
+    system("cls");
 
+/*Now the route traveled in the copy of the map is equal to zero, we match it with the original map and display the route in color.*/
     for (int i = 0; i <x ; ++i) {
         for (int j = 0; j <y ; ++j) {
             cout << '|';
@@ -413,6 +440,11 @@ void Solve(string **&playgroud,int length,int x,int y) {
 
 }
 
+
+
+
+//----------------------------------------------------------------------------------------------------------------------
+
 void play(string **&playgroud,int length,int x,int y){
 
 
@@ -421,6 +453,8 @@ void play(string **&playgroud,int length,int x,int y){
     cout<<"Enter The Username:";
     cin>>player_name;
     setTextColor(LIGHT_WHITE);
+
+    /*First, we will take a copy of the original map to move in it*/
 
     int **copy_map;
     copy_map = new int *[x + 2];
@@ -446,8 +480,10 @@ void play(string **&playgroud,int length,int x,int y){
 
     time_t now= time(0);
     char* date= ctime(&now);
-
+    system("cls");
     clock_t start=clock();
+    /*Then we display the function dynamically and move with the desired commands in
+     * the copy map and color the path and the block we are in turns red.*/
     while (x_move!=x||y_move!=y) {
 
 
@@ -469,6 +505,7 @@ void play(string **&playgroud,int length,int x,int y){
                     setTextColor(LIGHT_YELLOW);
                     cout << setw(2) << setfill(' ') << string(1, 2) << setw(2) << setfill(' ');
                     setTextColor(LIGHT_WHITE);
+
 
                 } else if (i == x - 1 && j == y - 1) {
                     setTextColor(LIGHT_YELLOW);
@@ -542,6 +579,7 @@ void play(string **&playgroud,int length,int x,int y){
 
 
                 }
+                system("cls");
             }
 
         }
@@ -567,6 +605,9 @@ void play(string **&playgroud,int length,int x,int y){
 
     }
 
+    /*The blocks of the path we take will change from one to zero in the copy of the map.
+     * Then, when we reach the last block, I add up the numbers of the path,
+     * if it is equal to the last house, we win, and if not, we display the correct path.*/
     clock_t finish=clock();
 
     int sum=0;
@@ -621,15 +662,16 @@ void play(string **&playgroud,int length,int x,int y){
         setTextColor(LIGHT_RED);
         cout<<"!!GAME OVER!!";
         setTextColor(LIGHT_WHITE);
-        result="game over!";
+        result="!!GAME OVER!!";
         Solve(map_read,length_map,x_map,y_map);
     }
-
+    /*Then we enter the duration of the game, the date, the name of the player, the name of the map and the result of the game in the history maker function.*/
     history_maker(to_string((double )(finish-start)/(double )(CLOCKS_PER_SEC)),date,player_name,map_name,result);
 
-    return;
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------
 
 
 void path (int x, int y, int length, int**& copy_maze, int target_x , int target_y) {
@@ -693,6 +735,8 @@ void path (int x, int y, int length, int**& copy_maze, int target_x , int target
 }
 
 
+//----------------------------------------------------------------------------------------------------------------------
+
 void EasyMap(int command) {
     /*
      First, in this part, we get (number of rows = x) and (number of columns = y).
@@ -707,6 +751,7 @@ void EasyMap(int command) {
     int length = x + y - 2;
     int playground[x][y];
     string name;
+    system("cls");
 
     srand(time(0));
 
@@ -715,6 +760,9 @@ void EasyMap(int command) {
     */
 
     int blocks = rand() % 4 + 2;
+    while (x*y-blocks<x+y-1){
+         blocks = rand() % 4 + 2;
+    }
 
     /*
      Now it's time to create a motion display. First, in this step, we set all the members of the array (movements) equal to two.
@@ -855,11 +903,18 @@ void EasyMap(int command) {
 }
 
 
+
+//----------------------------------------------------------------------------------------------------------------------
+
+
 void HardMap(int command){
         srand(time(0));
-    int x,y;
-    cin>>x>>y;
-    cout<<"Enter the length of the path :";
+    int x, y;
+    cout << "Enter the number of rows :";
+    cin >> x;
+    cout << "\nEnter the number of columns :";
+    cin >> y;
+    cout<<"\nEnter the length of the path :";
     cin>>tool;
 
     while ((tool-(x+y-2))%2!=0||tool>x*y||tool<x+y-2){
@@ -869,9 +924,10 @@ void HardMap(int command){
 
     int** copymap;
     int al,au,bl,bu;
-    cout<<"\nEnter the range of numbers in the table : (";
-    cin>>al;cout<<",";cin>>au;cout<<")\n";
-    cout<<"Enter a range of zero blocks : (";cin>>bl;cout<<",";cin>>bu;cout<<") \n";
+    cout<<"\nEnter the range of numbers in the table : ";
+    cin>>al>>au;
+    cout<<"\nEnter a range of zero blocks : ";
+    cin>>bl>>bu;
     copymap=new int *[x+2];
 
 
@@ -881,14 +937,16 @@ void HardMap(int command){
         cin>>bl>>bu;
 
     }
+    system("cls");
 
-
+/*Determining the number of zero blocks randomly*/
     int blocks=rand()%(bu-bl+1)+bl;
 
     while (blocks>(x*y)-tool-1){
         blocks=rand()%(bu-bl+1)+bl;
     }
-
+/*We take a copy of the map and consider its length and width plus 2 and set the box houses equal to zero,
+ * the middle houses equal to one and the last house equal to two.*/
     for (int i = 0; i < x+2 ; ++i) {
         copymap[i]=new int [y+2];
         for (int j = 0; j < y+2 ; ++j) {
@@ -903,13 +961,20 @@ void HardMap(int command){
     }
     copymap[x][y]=2;
 
+/*Now, using the path function, we take a random path of arbitrary length inside the copy of the map.
+ * After completing the desired path, the houses covered by the function are set to zero*/
+
     path(1,1,tool,copymap,x,y);
 
+    check= false;
 
-        cout<<endl<<endl;
+
 
         string playground [x][y];
         int random_number,sum=0;
+
+/*Now we place all the blocks of the copy map and the original map facing each other.
+ * And we place the blocks that are filled with zero in the copy map in the main map equal to a random number. and add it in the last block.*/
 
     for (int i = 0; i < x ; ++i) {
         for (int j = 0; j < y ; ++j) {
@@ -929,7 +994,7 @@ void HardMap(int command){
     }
 
     playground[x-1][y-1]=to_string(sum);
-
+/*Then we place zero blocks. And we place the rest of the blocks with a random number.*/
     for (int k = 0; k < blocks ; ++k) {
         int i=rand()%x;
         int j=rand()%y;
@@ -963,8 +1028,12 @@ void HardMap(int command){
     }
     map<<"$"<<tool<<"%";
     map.close();
+    delete(copymap);
 
 }
+
+
+//-----------------------------------------------------------------------------------------------------------------------
 
 int main(){
     int choose,command;
@@ -973,6 +1042,7 @@ int main(){
     cout<<"Enter your command :";
     cin>>choose;
     cout<<"\n";
+    system("cls");
     while (choose!=5) {
 
         if (choose == 1) {
@@ -982,6 +1052,7 @@ int main(){
             cout<<"1. Easy\n2. Hard\n";
             cout << "Enter your command :";
             cin >> command;
+            system("cls");
 
             if (command==1){
                 EasyMap(command);
@@ -1006,6 +1077,7 @@ int main(){
             cout<<"1. Choose from Existing Maps\n2. Import a Custom Map\n";
             cout << "Enter your command :";
             cin>>command;
+            system("cls");
             map_reader(command);
             play(map_read,length_map,x_map,y_map);
             cout<<endl<<endl;
@@ -1019,6 +1091,7 @@ int main(){
             cout<<"1. Choose from Existing Maps\n2. Import a Custom Map\n";
             cout << "Enter your command :";
             cin>>command;
+            system("cls");
             map_reader(command);
             Solve(map_read,length_map,x_map,y_map);
             cout<<endl<<endl;
@@ -1043,6 +1116,8 @@ int main(){
         cout<<"Enter your command :";
         cin>>choose;
         cout<<"\n";
+        system("cls");
+
 
     }
 
