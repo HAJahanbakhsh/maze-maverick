@@ -954,7 +954,7 @@ void HardMap(int command){
         }
     }
 
-    for (int i = 1; i < x+2 ; ++i) {
+    for (int i = 1; i < x+1 ; ++i) {
         for (int j = 1; j < y+1 ; ++j) {
             copymap[i][j]=1;
         }
